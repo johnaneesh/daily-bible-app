@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Bible Bread</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f7f6; color: #333; display: flex; justify-content: center; padding: 20px; }
+        .container { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        h1 { color: #2c3e50; text-align: center; }
+        .reading-card { border: 2px solid #e0e0e0; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; }
+        .passage { font-size: 1.5rem; font-weight: bold; color: #27ae60; display: block; margin: 10px 0; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-complete { background: #27ae60; color: white; }
+        .btn-remind { background: #3498db; color: white; margin-top: 10px; }
+        .status { text-align: center; font-size: 0.9rem; color: #666; margin-top: 10px; }
+    </style>
+
+     // Also add this link tag inside your <head> section:
+	<link rel="manifest" href="manifest.json">
+
+
+</head>
+<body>
+
+<div class="container">
+    <h1>Daily Bread</h1>
+    <div class="reading-card">
+        <small id="current-date"></small>
+        <span class="passage" id="passage-display">Genesis 1-3</span>
+        <button class="btn-complete" onclick="markComplete()">Mark as Read</button>
+    </div>
+    
+    <button class="btn-remind" onclick="setupReminder()">Set Daily Reminder</button>
+    <p class="status" id="stats"></p>
+</div>
+
+<script>
+    // 1. Basic Reading Plan (Example for 3 days - you can expand this to 365)
+    const readingPlan = [
+        { day: 1, passage: "Genesis 1-3" },
+        { day: 2, passage: "Genesis 4-7" },
+        { day: 3, passage: "Genesis 8-11" }
+        // ... add more days here
+    ];
+
+    // 2. Logic to find "Day of Year"
+    const now = new Date();
+    const start = new Date(now.getFullYear(), 0, 0);
+    const diff = now - start;
+    const oneDay = 1000 * 60 * 60 * 24;
+    const dayOfYear = Math.floor(diff / oneDay);
+
+    // 3. Display current day
+    const todayReading = readingPlan[dayOfYear - 1] || readingPlan[0];
+    document.getElementById('passage-display').innerText = todayReading.passage;
+    document.getElementById('current-date').innerText = now.toDateString();
+
+    // 4. Progress Tracking
+    function markComplete() {
+        localStorage.setItem(`day_${dayOfYear}`, 'completed');
+        updateStats();
+        alert("Great job! See you tomorrow.");
+    }
+
+    function updateStats() {
+        const completed = Object.keys(localStorage).filter(key => key.startsWith('day_')).length;
+        document.getElementById('stats').innerText = `You have completed ${completed} days this year!`;
+    }
+
+    // 5. Reminders using Web Notifications
+    function setupReminder() {
+        if (!("Notification" in window)) {
+            alert("This browser does not support desktop notification");
+        } else if (Notification.permission === "granted") {
+            scheduleNotification();
+        } else if (Notification.permission !== "denied") {
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") scheduleNotification();
+            });
+        }
+    }
+
+    function scheduleNotification() {
+        alert("Reminder Set! Keep this tab open to receive your daily alert.");
+        // This is a simple version: checks every hour if it's 8:00 AM
+        setInterval(() => {
+            const h = new Date().getHours();
+            if (h === 8) { // Set for 8 AM
+                new Notification("Bible Study Time!", {
+                    body: `Today's reading: ${todayReading.passage}`,
+                    icon: "https://via.placeholder.com/100
+                });
+            }
+        }, 3600000); 
+    }
+
+    updateStats();
+
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js')
+    .then(() => console.log("PWA Service Worker Registered"));
+}
+
+
+
+</script>
+
+</body>
+</html>
+
